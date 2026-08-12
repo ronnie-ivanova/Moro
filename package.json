@@ -1,0 +1,17 @@
+{
+  "name": "creature-interactive-observation",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "CREATURE — Interactive Observation. Одностраничный интерактивный сайт-экспириенс.",
+  "scripts": {
+    "frames": "node tools/generate-frames.mjs",
+    "preview": "node tools/generate-frames.mjs --preview",
+    "dev": "node tools/serve.mjs",
+    "start": "node tools/serve.mjs",
+    "build": "node tools/build.mjs"
+  },
+  "devDependencies": {
+    "sharp": "^0.35.3"
+  }
+}

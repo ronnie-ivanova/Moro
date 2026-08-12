@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>CREATURE — Interactive Observation</title>
+    <meta
+      name="description"
+      content="Интерактивное наблюдение за существом: оно следит за курсором огромными чёрными глазами."
+    />
+    <meta name="theme-color" content="#07211e" />
+    <link rel="preload" as="image" href="public/experience/frames/base.webp" />
+    <link rel="preload" as="image" href="public/experience/frames/poster.webp" />
+    <link rel="stylesheet" href="styles.css" />
+    <link
+      rel="icon"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%2307211e'/%3E%3Cellipse cx='16' cy='15' rx='7' ry='9' fill='%23e9e3d4'/%3E%3Ccircle cx='12.6' cy='13' r='3.4' fill='%23050809'/%3E%3Ccircle cx='19.4' cy='13' r='3.4' fill='%23050809'/%3E%3Cpath d='M16 20 L17.4 27 L14.6 27 Z' fill='%23d8d0bc'/%3E%3C/svg%3E"
+    />
+  </head>
+  <body class="is-loading">
+    <!-- Экран загрузки -->
+    <div class="boot" id="boot" role="status" aria-live="polite">
+      <div class="boot__inner">
+        <p class="boot__label">CREATURE® / FIELD STUDY 01</p>
+        <p class="boot__percent"><span id="boot-percent">0</span><i>%</i></p>
+        <div class="boot__bar"><span id="boot-bar"></span></div>
+        <p class="boot__hint" id="boot-hint">ПОДГОТОВКА НАБЛЮДЕНИЯ</p>
+      </div>
+    </div>
+
+    <!-- Кастомный курсор -->
+    <div class="cursor" id="cursor" aria-hidden="true">
+      <span class="cursor__ring"></span>
+      <span class="cursor__dot"></span>
+    </div>
+
+    <div class="frame" aria-hidden="true"></div>
+
+    <main class="stage" id="stage">
+      <!-- Существо -->
+      <div class="creature" id="creature">
+        <div class="creature__glow" aria-hidden="true"></div>
+        <canvas
+          id="creature-canvas"
+          class="creature__canvas"
+          role="img"
+          aria-label="Маленькое чёрное птицеподобное существо с бледной маской и огромными глазами следит за курсором"
+        ></canvas>
+      </div>
+      <div class="veil" aria-hidden="true"></div>
+
+      <!-- Шапка -->
+      <header class="head">
+        <div class="head__left">
+          <span class="head__logo">CREATURE<sup>®</sup></span>
+          <span class="head__meta">FIELD STUDY / 01</span>
+        </div>
+        <p class="head__center">ИНТЕРАКТИВНОЕ НАБЛЮДЕНИЕ</p>
+        <div class="head__right">
+          <span class="pulse" aria-hidden="true"></span>
+          <span class="head__meta">ОБЪЕКТ АКТИВЕН</span>
+        </div>
+      </header>
+
+      <!-- Левая текстовая часть -->
+      <section class="copy">
+        <p class="copy__eyebrow reveal" style="--d: 0.05s">— ОН УЖЕ ВАС ЗАМЕТИЛ</p>
+
+        <h1 class="copy__title">
+          <span class="reveal" style="--d: 0.14s">Не спускает</span>
+          <span class="copy__outline reveal" style="--d: 0.22s">с вас глаз.</span>
+        </h1>
+
+        <div class="copy__row">
+          <p class="copy__lead reveal" style="--d: 0.32s">
+            Проведите курсором по экрану. Существо заметит движение и проводит его
+            взглядом — куда бы вы ни направились.
+          </p>
+
+          <button class="catch reveal" id="catch" type="button" aria-label="Поймать взгляд существа: оно посмотрит прямо на вас">
+            <span class="catch__label">ПОЙМАТЬ<br />ВЗГЛЯД</span>
+            <svg class="catch__arrow" viewBox="0 0 28 8" aria-hidden="true">
+              <path d="M0 4h24M20 1l4 3-4 3" fill="none" stroke="currentColor" stroke-width="1.2" />
+            </svg>
+          </button>
+        </div>
+
+        <dl class="specs reveal" style="--d: 0.42s">
+          <div class="specs__item">
+            <dt class="specs__value">240</dt>
+            <dd class="specs__key">/ КАДРОВ</dd>
+          </div>
+          <div class="specs__item">
+            <dt class="specs__value">360°</dt>
+            <dd class="specs__key">/ ОБЗОР</dd>
+          </div>
+          <div class="specs__item specs__item--optional">
+            <dt class="specs__value">LIVE</dt>
+            <dd class="specs__key">/ РЕАКЦИЯ</dd>
+          </div>
+        </dl>
+      </section>
+
+      <!-- Футер -->
+      <footer class="foot reveal" style="--d: 0.52s">
+        <span>© 2026 CREATURE LAB</span>
+        <span class="foot__hint">ДВИГАЙТЕ КУРСОРОМ · НАБЛЮДАЙТЕ РЕАКЦИЮ</span>
+      </footer>
+    </main>
+
+    <script src="main.js" type="module"></script>
+  </body>
+</html>

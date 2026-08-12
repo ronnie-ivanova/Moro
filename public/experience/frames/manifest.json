@@ -1,0 +1,18 @@
+{
+  "count": 240,
+  "centerFrame": 119,
+  "pattern": "frame_%03d.webp",
+  "base": "base.webp",
+  "poster": "poster.webp",
+  "stage": {
+    "width": 720,
+    "height": 880
+  },
+  "head": {
+    "x": 100,
+    "y": 0,
+    "width": 520,
+    "height": 552
+  },
+  "generatedBy": "tools/generate-frames.mjs"
+}

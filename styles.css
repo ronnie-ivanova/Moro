@@ -1,0 +1,770 @@
+/* ==========================================================================
+   CREATURE — Interactive Observation
+   dark editorial / biological interface
+   ========================================================================== */
+
+:root {
+  --bg: #07211e;
+  --bg-deep: #041413;
+  --lime: #c9f56d;
+  --milk: #f3efe4;
+  --muted: #9d9a8c;
+  --line: rgba(226, 232, 220, 0.14);
+  --line-soft: rgba(226, 232, 220, 0.09);
+
+  --head-h: 96px;
+  --foot-h: 64px;
+  --pad: 5vw;
+
+  --sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue",
+    Arial, sans-serif;
+  --mono: ui-monospace, "SF Mono", "JetBrains Mono", "Roboto Mono", Menlo, Consolas,
+    monospace;
+
+  --ease: cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  overflow-x: hidden;
+  overflow-x: clip;
+}
+
+body {
+  min-height: 100vh;
+  background: var(--bg-deep);
+  color: var(--milk);
+  font-family: var(--sans);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  overscroll-behavior: none;
+}
+
+@media (pointer: fine) {
+  body,
+  body * {
+    cursor: none;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   Экран загрузки
+   -------------------------------------------------------------------------- */
+
+.boot {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: grid;
+  place-items: center;
+  background: var(--bg-deep);
+  transition: opacity 0.7s var(--ease), visibility 0.7s;
+}
+
+.boot.is-done {
+  opacity: 0;
+  visibility: hidden;
+}
+
+.boot__inner {
+  width: min(320px, 72vw);
+  text-align: left;
+}
+
+.boot__label,
+.boot__hint {
+  margin: 0;
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.18em;
+  color: rgba(243, 239, 228, 0.38);
+}
+
+.boot__percent {
+  margin: 18px 0 12px;
+  font-size: 54px;
+  font-weight: 700;
+  letter-spacing: -0.04em;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+.boot__percent i {
+  font-style: normal;
+  font-size: 16px;
+  color: var(--lime);
+  margin-left: 4px;
+  vertical-align: super;
+}
+
+.boot__bar {
+  height: 1px;
+  background: rgba(243, 239, 228, 0.13);
+  overflow: hidden;
+}
+
+.boot__bar span {
+  display: block;
+  height: 100%;
+  width: 0%;
+  background: var(--lime);
+  transition: width 0.25s linear;
+}
+
+.boot__hint {
+  margin-top: 14px;
+}
+
+/* --------------------------------------------------------------------------
+   Курсор
+   -------------------------------------------------------------------------- */
+
+.cursor {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 90;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.35s var(--ease);
+}
+
+.cursor.is-on {
+  opacity: 1;
+}
+
+.cursor__dot,
+.cursor__ring {
+  position: absolute;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.cursor__dot {
+  width: 5px;
+  height: 5px;
+  background: var(--lime);
+}
+
+.cursor__ring {
+  width: 30px;
+  height: 30px;
+  border: 1px solid rgba(201, 245, 109, 0.45);
+  transition: width 0.3s var(--ease), height 0.3s var(--ease),
+    border-color 0.3s var(--ease);
+}
+
+.cursor.is-wide .cursor__ring {
+  width: 62px;
+  height: 62px;
+  border-color: rgba(201, 245, 109, 0.8);
+}
+
+@media (pointer: coarse) {
+  .cursor {
+    display: none;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   Сцена
+   -------------------------------------------------------------------------- */
+
+.frame {
+  position: fixed;
+  inset: 14px;
+  border: 1px solid var(--line-soft);
+  pointer-events: none;
+  z-index: 40;
+}
+
+.stage {
+  position: relative;
+  display: grid;
+  grid-template-rows: var(--head-h) 1fr var(--foot-h);
+  height: 100vh;
+  height: 100dvh;
+  min-height: 560px;
+  overflow: hidden;
+  background:
+    radial-gradient(120% 90% at 76% 62%, rgba(24, 92, 82, 0.6) 0%, rgba(7, 33, 30, 0) 62%),
+    radial-gradient(70% 60% at 88% 38%, rgba(122, 214, 188, 0.16) 0%, rgba(7, 33, 30, 0) 70%),
+    linear-gradient(160deg, #0a2825 0%, var(--bg) 45%, #041614 100%);
+}
+
+/* мягкое зерно, чтобы градиент не «полосил» */
+.stage::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 5;
+  opacity: 0.05;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+/* --------------------------------------------------------------------------
+   Существо
+   -------------------------------------------------------------------------- */
+
+.creature {
+  position: absolute;
+  right: 3vw;
+  bottom: calc(var(--foot-h) - 26px);
+  z-index: 1;
+  height: clamp(360px, 72vh, 940px);
+  aspect-ratio: 900 / 1100;
+  opacity: 0;
+  transform: translateY(26px);
+  transition: opacity 1.2s var(--ease), transform 1.2s var(--ease);
+}
+
+body.is-ready .creature {
+  opacity: 1;
+  transform: none;
+}
+
+.creature__glow {
+  position: absolute;
+  left: 50%;
+  top: 46%;
+  width: 150%;
+  height: 120%;
+  transform: translate(-50%, -50%);
+  background: radial-gradient(
+    closest-side,
+    rgba(126, 224, 196, 0.22) 0%,
+    rgba(126, 224, 196, 0.06) 45%,
+    rgba(126, 224, 196, 0) 72%
+  );
+  pointer-events: none;
+}
+
+.creature__canvas {
+  position: relative;
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+/* затемнение слева, чтобы текст читался поверх сцены */
+.veil {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+  background: linear-gradient(
+    100deg,
+    rgba(3, 16, 15, 0.96) 0%,
+    rgba(3, 16, 15, 0.88) 28%,
+    rgba(3, 16, 15, 0.44) 50%,
+    rgba(3, 16, 15, 0) 68%
+  );
+}
+
+/* --------------------------------------------------------------------------
+   Шапка
+   -------------------------------------------------------------------------- */
+
+.head {
+  position: relative;
+  z-index: 10;
+  grid-row: 1;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: 16px;
+  padding: 0 var(--pad);
+  border-bottom: 1px solid var(--line);
+}
+
+.head__left,
+.head__right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.head__right {
+  grid-column: 3;
+  justify-content: flex-end;
+}
+
+.head__logo {
+  font-size: 17px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+.head__logo sup {
+  position: relative;
+  font-size: 8px;
+  font-weight: 600;
+  top: -0.7em;
+}
+
+.head__meta,
+.head__center {
+  margin: 0;
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.16em;
+  color: rgba(243, 239, 228, 0.42);
+  white-space: nowrap;
+}
+
+.head__center {
+  color: rgba(243, 239, 228, 0.6);
+  letter-spacing: 0.2em;
+}
+
+.pulse {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--lime);
+  box-shadow: 0 0 0 0 rgba(201, 245, 109, 0.6);
+  animation: pulse 2.2s var(--ease) infinite;
+  flex: none;
+}
+
+@keyframes pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(201, 245, 109, 0.55);
+  }
+  70% {
+    box-shadow: 0 0 0 11px rgba(201, 245, 109, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(201, 245, 109, 0);
+  }
+}
+
+/* --------------------------------------------------------------------------
+   Левый текстовый блок
+   -------------------------------------------------------------------------- */
+
+.copy {
+  position: absolute;
+  z-index: 10;
+  left: 5%;
+  top: 47%;
+  transform: translateY(-50%);
+  width: min(46%, 760px);
+  min-width: 0;
+}
+
+.copy__eyebrow {
+  margin: 0 0 22px;
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--lime);
+}
+
+.copy__title {
+  margin: 0;
+  font-size: clamp(42px, 7.6vw, 118px);
+  font-weight: 800;
+  line-height: 0.92;
+  letter-spacing: -0.045em;
+}
+
+.copy__title span {
+  display: block;
+}
+
+.copy__outline {
+  color: transparent;
+  -webkit-text-stroke: 1.1px rgba(243, 239, 228, 0.75);
+}
+
+.copy__row {
+  display: flex;
+  align-items: flex-end;
+  gap: clamp(24px, 4vw, 56px);
+  margin-top: clamp(28px, 4.2vh, 56px);
+}
+
+.copy__lead {
+  margin: 0;
+  max-width: 366px;
+  font-size: 15px;
+  line-height: 1.6;
+  color: var(--muted);
+}
+
+/* --------------------------------------------------------------------------
+   Круглая кнопка
+   -------------------------------------------------------------------------- */
+
+.catch {
+  flex: none;
+  position: relative;
+  display: grid;
+  place-content: center;
+  gap: 9px;
+  width: 128px;
+  height: 128px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: var(--milk);
+  color: #06201d;
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  line-height: 1.5;
+  text-align: center;
+  transition: background 0.45s var(--ease), transform 0.45s var(--ease),
+    box-shadow 0.45s var(--ease);
+}
+
+.catch:hover,
+.catch:focus-visible {
+  background: var(--lime);
+  transform: translateY(-2px);
+  box-shadow: 0 14px 40px -18px rgba(201, 245, 109, 0.75);
+}
+
+.catch:focus-visible {
+  outline: 1px solid var(--lime);
+  outline-offset: 6px;
+}
+
+.catch:active {
+  transform: translateY(0) scale(0.97);
+}
+
+.catch__arrow {
+  width: 26px;
+  height: 8px;
+  justify-self: center;
+  transition: transform 0.45s var(--ease);
+}
+
+.catch:hover .catch__arrow,
+.catch:focus-visible .catch__arrow {
+  transform: translateX(5px);
+}
+
+.catch.is-busy {
+  background: var(--lime);
+}
+
+/* --------------------------------------------------------------------------
+   Параметры
+   -------------------------------------------------------------------------- */
+
+.specs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: clamp(22px, 3vw, 46px);
+  margin: clamp(28px, 4vh, 52px) 0 0;
+}
+
+.specs__item {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.specs__value {
+  margin: 0;
+  font-size: 19px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: rgba(243, 239, 228, 0.92);
+}
+
+.specs__key {
+  margin: 0;
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: 0.16em;
+  color: rgba(243, 239, 228, 0.34);
+}
+
+/* --------------------------------------------------------------------------
+   Футер
+   -------------------------------------------------------------------------- */
+
+.foot {
+  position: relative;
+  z-index: 10;
+  grid-row: 3;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 0 var(--pad);
+  border-top: 1px solid var(--line);
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: 0.16em;
+  color: rgba(243, 239, 228, 0.28);
+}
+
+.foot__hint {
+  text-align: right;
+}
+
+/* --------------------------------------------------------------------------
+   Появление
+   -------------------------------------------------------------------------- */
+
+.reveal {
+  opacity: 0;
+  transform: translateY(22px);
+}
+
+body.is-ready .reveal {
+  opacity: 1;
+  transform: none;
+  transition: opacity 0.9s var(--ease) var(--d, 0s),
+    transform 0.9s var(--ease) var(--d, 0s);
+}
+
+body.is-loading {
+  overflow: hidden;
+}
+
+/* --------------------------------------------------------------------------
+   Планшеты
+   -------------------------------------------------------------------------- */
+
+@media (max-width: 1180px) {
+  :root {
+    --head-h: 88px;
+  }
+
+  .copy {
+    width: min(52%, 560px);
+  }
+
+  .copy__title {
+    font-size: clamp(40px, 6.4vw, 74px);
+  }
+
+  .catch {
+    width: 112px;
+    height: 112px;
+  }
+
+  .creature {
+    right: 0.5vw;
+    height: clamp(320px, 62vh, 720px);
+  }
+}
+
+@media (max-width: 900px) {
+  .head__center {
+    display: none;
+  }
+
+  .copy__row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 28px;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   Мобильные: существо — фоновый главный объект, текст ниже
+   -------------------------------------------------------------------------- */
+
+@media (max-width: 720px) {
+  :root {
+    --head-h: 72px;
+    --foot-h: 56px;
+    --pad: 20px;
+  }
+
+  .frame {
+    inset: 9px;
+  }
+
+  .stage {
+    grid-template-rows: var(--head-h) 1fr auto var(--foot-h);
+    height: auto;
+    min-height: 100vh;
+    min-height: 100dvh;
+  }
+
+  .head {
+    grid-template-columns: auto 1fr;
+  }
+
+  .head__left .head__meta {
+    display: none;
+  }
+
+  .head__right {
+    grid-column: 2;
+  }
+
+  .foot {
+    grid-row: 4;
+  }
+
+  .creature {
+    right: auto;
+    left: 50%;
+    bottom: auto;
+    top: calc(var(--head-h) - 2vh);
+    transform: translateX(-50%) translateY(20px);
+    height: min(46vh, 380px);
+    opacity: 0;
+  }
+
+  body.is-ready .creature {
+    opacity: 0.96;
+    transform: translateX(-50%);
+  }
+
+  .veil {
+    background: linear-gradient(
+      180deg,
+      rgba(4, 18, 17, 0.28) 0%,
+      rgba(4, 18, 17, 0.12) 26%,
+      rgba(4, 18, 17, 0.78) 56%,
+      rgba(4, 18, 17, 0.96) 74%
+    );
+  }
+
+  .copy {
+    position: static;
+    grid-row: 3;
+    transform: none;
+    width: auto;
+    padding: 0 var(--pad) 22px;
+  }
+
+  .copy__eyebrow {
+    margin-bottom: 14px;
+  }
+
+  .copy__title {
+    font-size: clamp(29px, 8.6vw, 46px);
+    line-height: 1;
+    letter-spacing: -0.035em;
+  }
+
+  .copy__outline {
+    -webkit-text-stroke-width: 0.9px;
+  }
+
+  .copy__row {
+    flex-direction: row;
+    align-items: center;
+    gap: 18px;
+    margin-top: 20px;
+  }
+
+  .copy__lead {
+    flex: 1 1 auto;
+    min-width: 0;
+    font-size: 14px;
+    max-width: none;
+  }
+
+  .catch {
+    width: 96px;
+    height: 96px;
+    font-size: 9px;
+  }
+
+  .catch__arrow {
+    width: 20px;
+  }
+
+  .specs {
+    margin-top: 20px;
+    gap: 18px;
+  }
+
+  .specs__value {
+    font-size: 16px;
+  }
+
+  .foot__hint {
+    display: none;
+  }
+}
+
+@media (max-width: 420px) {
+  .specs__item--optional {
+    display: none;
+  }
+
+  .copy__row {
+    gap: 14px;
+  }
+
+  .catch {
+    width: 88px;
+    height: 88px;
+  }
+
+  .foot {
+    justify-content: center;
+  }
+}
+
+@media (max-height: 620px) and (min-width: 721px) {
+  .copy__title {
+    font-size: clamp(38px, 5.4vw, 68px);
+  }
+
+  .specs {
+    margin-top: 22px;
+  }
+
+  .creature {
+    height: clamp(280px, 52vh, 520px);
+  }
+}
+
+/* --------------------------------------------------------------------------
+   Уважение к prefers-reduced-motion
+   -------------------------------------------------------------------------- */
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+
+  .cursor {
+    display: none;
+  }
+
+  body,
+  body * {
+    cursor: auto;
+  }
+
+  .reveal {
+    opacity: 1;
+    transform: none;
+  }
+
+  .creature {
+    opacity: 1;
+    transform: none;
+  }
+}
