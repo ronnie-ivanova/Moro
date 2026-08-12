@@ -6,7 +6,7 @@
   "description": "CREATURE — Interactive Observation. Одностраничный интерактивный сайт-экспириенс.",
   "scripts": {
     "frames": "node tools/generate-frames.mjs",
-    "preview": "node tools/generate-frames.mjs --preview",
+    "preview": "node tools/preview.mjs preview.png",
     "dev": "node tools/serve.mjs",
     "start": "node tools/serve.mjs",
     "build": "node tools/build.mjs"
